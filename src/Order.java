@@ -7,6 +7,7 @@ public class Order {
     private FulfillmentType fulfillmentType;
     private OrderStatus status;
     private String address;
+    private PaymentResult paymentResult;
 
     Order(Customer customer, FulfillmentType fulfillmentType) {
         this.customer = customer;
@@ -17,6 +18,9 @@ public class Order {
     public void addItem(OrderItem item) {
         if (this.status == OrderStatus.CANCELLED || this.status == OrderStatus.COMPLETED) {
             throw new IllegalStateException("Cannot modify a completed or cancelled order.");
+        }
+        if (!item.getItem().isAvailable()) {
+            throw new IllegalStateException("Cannot add unavailable item.");
         }
         items.add(item);
     }
@@ -38,18 +42,22 @@ public class Order {
             status = newStatus;
 
         } else if (status == OrderStatus.PREPARING &&
-                (newStatus == OrderStatus.COMPLETED ||
+                (newStatus == OrderStatus.READY ||
                         newStatus == OrderStatus.CANCELLED)) {
 
             status = newStatus;
 
-        } else {
+        } else if (status == OrderStatus.READY &&
+                newStatus == OrderStatus.COMPLETED) {
+
+            status = newStatus;
+
+        }else {
             throw new IllegalStateException(
                     "Invalid order status transition."
             );
         }
     }
-
     void setAddress(String address) {
         if (address == null || address.isBlank() || this.fulfillmentType != FulfillmentType.DELIVERY) {
             throw new IllegalArgumentException("Address is required for delivery orders.");
@@ -88,7 +96,20 @@ public class Order {
             }
         }
     }
+
     public FulfillmentType getFulfillmentType() {
         return fulfillmentType;
+    }
+
+    public void setPaymentResult(PaymentResult paymentResult) {
+        this.paymentResult = paymentResult;
+    }
+
+    public PaymentResult getPaymentResult() {
+        return paymentResult;
+    }
+
+    public Customer getCustomer() {
+        return customer;
     }
 }
