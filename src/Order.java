@@ -16,6 +16,11 @@ public class Order {
     }
 
     public void addItem(OrderItem item) {
+        if (item == null) {
+            throw new IllegalArgumentException(
+                    "Order item cannot be null."
+            );
+        }
         if (this.status == OrderStatus.CANCELLED || this.status == OrderStatus.COMPLETED) {
             throw new IllegalStateException("Cannot modify a completed or cancelled order.");
         }

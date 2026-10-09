@@ -1,164 +1,121 @@
+
+
 public class Main {
+
     public static void main(String[] args) {
 
-        // ==================== SETUP ====================
+        // Create menu items
+        Pizza margherita = new Pizza("Margherita", 100, PizzaSize.SMALL, true);
 
-        Customer customer = new Customer("01096305402");
-
-        Order order = new Order(
-                customer,
-                FulfillmentType.TAKEAWAY
-        );
+        Pizza chickenRanch = new Pizza("Chicken Ranch", 160, PizzaSize.SMALL, true);
 
         MenuItem cola = new MenuItem("Cola", 30, true);
         MenuItem water = new MenuItem("Water", 15, true);
-        MenuItem chickenRanch =
-                new MenuItem("Chicken Ranch", 160, true);
+        GarlicBread garlicBread = new GarlicBread("Garlic Bread", 50, true);
 
+        //  Create customer
+        Customer customer = new Customer("01012345678");
 
-        // ==================== ORDER ITEMS ====================
+        // Create order
+        Order order = new Order(customer, FulfillmentType.DELIVERY);
 
-        OrderItem colaItem = new OrderItem(cola, 2);
-        OrderItem waterItem = new OrderItem(water, 1);
-        OrderItem chickenRanchItem =
-                new OrderItem(chickenRanch, 1);
+        // Add items with quantities
+        margherita.addToppings(Topping.EXTRA_CHEESE);
 
-        order.addItem(colaItem);
-        order.addItem(waterItem);
-        order.addItem(chickenRanchItem);
+     order.addItem(new OrderItem(margherita, 2));
+        order.addItem(new OrderItem(chickenRanch, 1));
+        order.addItem(new OrderItem(cola, 2));
+        order.addItem(new OrderItem(water, 2));
+        order.addItem(new OrderItem(garlicBread, 1));
+        // Set delivery address and confirm order
+        order.setAddress("Cairo, Egypt");
+        order.confirmOrder();
 
-
-        // ==================== PRICING ====================
-
+        // Calculate pricing
         PricingService pricingService = new PricingService();
 
-        double subtotal =
-                pricingService.calculateSubtotal(order);
+        double subtotal = pricingService.calculateSubtotal(order);
+        double discount = pricingService.calculateDiscount(order);
+        double deliveryCharge = pricingService.calculateFulfillmentCharge(order);
+        double total = pricingService.calculateFinalTotal(order);
+  double promotionDiscount =pricingService.calculatePromotionDiscount(order);
+        System.out.println("Subtotal: " + subtotal + " EGP");
+        System.out.println("Discount: " + discount + " EGP");
+        System.out.println("PromotionDiscount: " + promotionDiscount + " EGP");
+        System.out.println("Delivery: " + deliveryCharge + " EGP");
+        System.out.println("Final total: " + total + " EGP");
 
-        double discount =
-                pricingService.calculateDiscount(order);
-
-        double fulfillmentCharge =
-                pricingService.calculateFulfillmentCharge(order);
-
-        double finalTotal =
-                pricingService.calculateFinalTotal(order);
-
-        System.out.println("===== Pizza El Sultan =====");
-        System.out.println("Order Type: " + order.getFulfillmentType());
-        System.out.println("Subtotal: " + subtotal);
-        System.out.println("Discount: " + discount);
-        System.out.println("Fulfillment Charge: " + fulfillmentCharge);
-        System.out.println("Final Total: " + finalTotal);
-
-
-        // ==================== PAYMENT ====================
-
-        CashPayment cashPayment = new CashPayment();
-
-        PaymentResult cashResult =
-                cashPayment.pay(finalTotal);
-
-        order.setPaymentResult(cashResult);
-
-        System.out.println("Cash Payment: " + cashResult);
-
-
-        CardPayment cardPayment =
-                new CardPayment(false);
-
-        PaymentResult cardResult =
-                cardPayment.pay(finalTotal);
-
-        System.out.println("Card Payment: " + cardResult);
-
-
-        // ==================== ORDER STATUS ====================
-
-        System.out.println("Current Status: " + order.getStatus());
-
+        // Start preparing the order
         order.changeStatus(OrderStatus.PREPARING);
-        System.out.println("Current Status: " + order.getStatus());
 
+
+        // Payment
+//        Payment payment = new CardPayment(true);
+//
+//        PaymentResult result = payment.pay(total);
+//
+//        order.setPaymentResult(result);
+//
+//        if (result == PaymentResult.SUCCESS) {
+//            System.out.println("Payment successful.");
+//        } else {
+//            System.out.println("Payment failed.");
+//        }
+
+
+        Payment payment = new WalletPayment(1000.0);
+
+        PaymentResult result = payment.pay(total);
+
+        order.setPaymentResult(result);
+
+        if (result == PaymentResult.SUCCESS) {
+            System.out.println("Wallet payment successful.");
+        } else {
+            System.out.println("Wallet payment failed.");
+        }
+
+        WalletPayment wallet = (WalletPayment) payment;
+        System.out.println("Remaining wallet balance: "
+                + wallet.getBalance() + " EGP");
+
+
+        //  Order is ready
         order.changeStatus(OrderStatus.READY);
-        System.out.println("Current Status: " + order.getStatus());
 
-        order.changeStatus(OrderStatus.COMPLETED);
-        System.out.println("Current Status: " + order.getStatus());
+        //  Notify customer by SMS
+       // NotificationService notificationService = new SMSNotification();
+     //   notificationService.send(order, "Your order is ready!");
+        NotificationService notificationService = new WhatsAppNotification();
+        notificationService.send(order, "Your order is ready!");
+        // Delivery simulation
+//        DeliveryService deliveryService = new InternalDelivery();
+//
+//        deliveryService.assignDriver(order);
+//        deliveryService.estimateDeliveryTime(order);
+//        deliveryService.trackDelivery(order);
 
+        DeliveryService deliveryService = new SultanExpress();
 
-        // ==================== DELIVERY ====================
-
-        Order deliveryOrder =
-                new Order(
-                        customer,
-                        FulfillmentType.DELIVERY
-                );
-
-        deliveryOrder.setAddress("Cairo");
-
-        deliveryOrder.addItem(
-                new OrderItem(cola, 1)
-        );
-
-        deliveryOrder.confirmOrder();
-
-        System.out.println("Delivery order confirmed.");
-        DeliveryService deliveryService =
-                new InternalDelivery();
-
-        deliveryService.assignDriver(deliveryOrder);
+        deliveryService.assignDriver(order);
 
         int estimatedTime =
-                deliveryService.estimateDeliveryTime(deliveryOrder);
+                deliveryService.estimateDeliveryTime(order);
 
         System.out.println(
                 "Estimated delivery time: "
-                        + estimatedTime
-                        + " minutes"
-        );
-        NotificationService notificationService =
-                new SMSNotification();
-
-        notificationService.send(
-                deliveryOrder,
-                "Your order is ready."
+                        + estimatedTime + " minutes"
         );
 
-        // ==================== EDGE CASE ====================
+        deliveryService.trackDelivery(order);
 
-        Order deliveryOrderWithoutAddress =
-                new Order(
-                        customer,
-                        FulfillmentType.DELIVERY
-                );
+        // Complete the order after delivery
+        order.changeStatus(OrderStatus.COMPLETED);
 
-        deliveryOrderWithoutAddress.addItem(
-                new OrderItem(cola, 1)
-        );
-
-//        deliveryOrderWithoutAddress.confirmOrder();
-
-// Invalid price
-        try {
-
-            new MenuItem(
-                    "Invalid Item",
-                    -10,
-                    true
-            );
-
-        } catch (IllegalArgumentException e) {
-
-            System.out.println(
-                    "Invalid price error: " +
-                            e.getMessage()
-            );
-        }
-        // ==================== RECEIPT ====================
-
+        // Print receipt
         Receipt receipt = new Receipt();
-
         System.out.println(receipt.generate(order));
+
+
     }
 }

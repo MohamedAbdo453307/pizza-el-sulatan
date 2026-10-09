@@ -7,6 +7,11 @@ public class Pizza extends MenuItem {
 
     public Pizza(String name, double price, PizzaSize size,boolean available) {
         super(name, price,available);
+        if (size == null) {
+            throw new IllegalArgumentException(
+                    "Pizza size cannot be null."
+            );
+        }
         this.size = size;
     }
 

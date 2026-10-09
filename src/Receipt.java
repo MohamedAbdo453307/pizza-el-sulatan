@@ -7,8 +7,11 @@ public class Receipt {
         double discount = pricingService.calculateDiscount(order);
         double fulfillmentCharge =
                 pricingService.calculateFulfillmentCharge(order);
+        double promotionDiscount = pricingService.calculatePromotionDiscount(order);
+
         double finalTotal =
                 pricingService.calculateFinalTotal(order);
+
 
         StringBuilder receipt = new StringBuilder();
 
@@ -33,6 +36,9 @@ public class Receipt {
 
         receipt.append("Discount: ")
                 .append(discount)
+                .append("\n");
+        receipt.append("PromotionDiscount: ")
+                .append(promotionDiscount)
                 .append("\n");
 
         receipt.append("Fulfillment Charge: ")

@@ -23,11 +23,23 @@ public class PricingService {
         return 0;
     }
 
-    public double calculateFinalTotal(Order order) {
-        double finalTotal= calculateSubtotal(order) - calculateDiscount(order)+ calculateFulfillmentCharge(order);
-       if(finalTotal<0){
-           return  0;
-       }
-       return finalTotal;
+    public double calculatePromotionDiscount(Order order) {
+        int numOfPizza = 0;
+        double subTotal = calculateSubtotal(order);
+        for (OrderItem item : order.getItems()) {
+            if (item.getItem() instanceof Pizza) {
+                numOfPizza += item.getQuantity();
+            }
+        }
+        return (subTotal > 300 && numOfPizza >= 2) ? subTotal * .15 : 0;
     }
+
+    public double calculateFinalTotal(Order order) {
+        double finalTotal = calculateSubtotal(order) - calculateDiscount(order) - calculatePromotionDiscount(order) + calculateFulfillmentCharge(order);
+        if (finalTotal < 0) {
+            return 0;
+        }
+        return finalTotal;
+    }
+
 }
